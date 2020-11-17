@@ -40,9 +40,17 @@ type gameController struct {
 }
 
 //Function of semaphore
-func semaphoreBehavior() {
+func semaphoreBehavior(currentSemaphore semaphore) {
 	for {
-
+		if currentSemaphore.counter == 20 {
+			if currentSemaphore.color == 0 {
+				currentSemaphore.color = 1
+			} else if currentSemaphore.color == 1 {
+				currentSemaphore.color = 0
+			}
+		} else {
+			currentSemaphore.counter++
+		}
 	}
 }
 
@@ -93,9 +101,6 @@ func main() {
 					counter: 0,
 				}
 				mainGameController.semaphores = append(mainGameController.semaphores, tempSemaphore)
-			}
-			for i := 0; i < mainGameController.numberOfSemaphores; i++ {
-				fmt.Println(mainGameController.semaphores[i].color)
 			}
 			gameStarted = 3
 			fmt.Println(" ")
