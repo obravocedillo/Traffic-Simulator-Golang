@@ -3,12 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"strconv"
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 var gameStarted int 
@@ -24,8 +21,6 @@ type semaphore struct {
 	//Positio of the semaphore
 	positionX float64
 	positionY float64
-	image *ebiten.Image
-	options ebiten.DrawImageOptions
 }
 
 //Struct of the cars
@@ -38,8 +33,6 @@ type car struct {
 	status int
 	positionX float64
 	positionY float64
-	image *ebiten.Image
-	options ebiten.DrawImageOptions
 }
 
 //Struct of the game controller
@@ -75,74 +68,6 @@ func carBehavior(carIndex int) {
 	}
 }
 
-func drawBoard(screen *ebiten.Image){
-	//Every sprite is 80*80 for moving the road just add or remove 80
-	roadMain, _, _ := ebitenutil.NewImageFromFile("roads/roadNEWS.png", ebiten.FilterDefault)
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)-40)
-	screen.DrawImage(roadMain,op)
-
-	road1, _, _ := ebitenutil.NewImageFromFile("roads/roadEW.png", ebiten.FilterDefault)
-	op2 := &ebiten.DrawImageOptions{}
-	op2.GeoM.Translate(float64(mainGameController.screenWidth/2)+40, float64(mainGameController.screenHeight/2)-40)
-	screen.DrawImage(road1,op2)
-
-	road2, _, _ := ebitenutil.NewImageFromFile("roads/roadEW.png", ebiten.FilterDefault)
-	op3 := &ebiten.DrawImageOptions{}
-	op3.GeoM.Translate(float64(mainGameController.screenWidth/2)-120, float64(mainGameController.screenHeight/2)-40)
-	screen.DrawImage(road2,op3)
-
-	road3, _, _ := ebitenutil.NewImageFromFile("roads/roadNS.png", ebiten.FilterDefault)
-	op4 := &ebiten.DrawImageOptions{}
-	op4.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)+40)
-	screen.DrawImage(road3,op4)
-
-	road4, _, _ := ebitenutil.NewImageFromFile("roads/roadNS.png", ebiten.FilterDefault)
-	op5 := &ebiten.DrawImageOptions{}
-	op5.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)-120)
-	screen.DrawImage(road4,op5)
-
-	road5, _, _ := ebitenutil.NewImageFromFile("roads/roadSE.png", ebiten.FilterDefault)
-	op6 := &ebiten.DrawImageOptions{}
-	op6.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)-200)
-	screen.DrawImage(road5,op6)
-
-	road6, _, _ := ebitenutil.NewImageFromFile("roads/roadSE.png", ebiten.FilterDefault)
-	op7 := &ebiten.DrawImageOptions{}
-	op7.GeoM.Translate(float64(mainGameController.screenWidth/2)-200, float64(mainGameController.screenHeight/2)-40)
-	screen.DrawImage(road6,op7)
-
-	road8, _, _ := ebitenutil.NewImageFromFile("roads/roadSW.png", ebiten.FilterDefault)
-	op9 := &ebiten.DrawImageOptions{}
-	op9.GeoM.Translate(float64(mainGameController.screenWidth/2)+120, float64(mainGameController.screenHeight/2)-40)
-	screen.DrawImage(road8,op9)
-
-	road10, _, _ := ebitenutil.NewImageFromFile("roads/roadNS.png", ebiten.FilterDefault)
-	op11 := &ebiten.DrawImageOptions{}
-	op11.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)+120)
-	screen.DrawImage(road10,op11)
-
-
-}
-
-//Game Loo
-func update(screen *ebiten.Image) error {
-	if ebiten.IsDrawingSkipped() {
-		return nil
-	}
-
-	//This part of the code draws the static road
-	drawBoard(screen)
-	//This part of the code draws the static road
-
-	//This part of the code draws all the cars in the screen and update the position of the cars
-	for i := 0; i < mainGameController.numberOfCars; i++ {
-		mainGameController.cars[i].options.GeoM.Translate(mainGameController.cars[i].positionX, mainGameController.cars[i].positionY)
-		screen.DrawImage(mainGameController.cars[i].image, &mainGameController.cars[i].options)
-	}
-	return nil
-}
-
 func main() {
 	//Status of the game
 	//0 Game not started
@@ -155,7 +80,6 @@ func main() {
 		numberOfSemaphores: 5,
 		screenWidth: 620,	
 		screenHeight: 400,
-
 	}
 	//Options opened flag
 	optionsOpen := false
@@ -171,20 +95,12 @@ func main() {
 		if option == "1" {
 			for i := 0; i < mainGameController.numberOfCars; i++ {
 				//Default values for cars
-				currentImage, _, err := ebitenutil.NewImageFromFile("roads/car.png", ebiten.FilterDefault)
-				if err != nil {
-					log.Fatal(err)
-				}
 				tempCar := car{
 					//Random speed from 1 to 10
 					speed: (rand.Float64() * (10-1)),
 					status: 0,
-					//Image of the car
-					image: currentImage,
 					positionX: 0.0,
 					positionY: 0.0,
-					//Draw Options of the car
-					options: ebiten.DrawImageOptions{},
 				}
 				mainGameController.cars = append(mainGameController.cars, tempCar)
 				go carBehavior(i)
@@ -197,9 +113,6 @@ func main() {
 					counter: 0,
 				}
 				mainGameController.semaphores = append(mainGameController.semaphores, tempSemaphore)
-			}
-			if err := ebiten.Run(update, mainGameController.screenWidth, mainGameController.screenHeight, 2, "Traffic Simulator"); err != nil {
-				log.Fatal(err)
 			}
 			gameStarted = 3
 			fmt.Println(" ")
