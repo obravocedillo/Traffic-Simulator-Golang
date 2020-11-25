@@ -122,6 +122,51 @@ func drawBoard(screen *ebiten.Image){
 	op11.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)+120)
 	screen.DrawImage(road10,op11)
 
+	road11, _, _ := ebitenutil.NewImageFromFile("roads/roadNW.png", ebiten.FilterDefault)
+	op12 := &ebiten.DrawImageOptions{}
+	op12.GeoM.Translate(float64(mainGameController.screenWidth/2)+200, float64(mainGameController.screenHeight/2)-200)
+	screen.DrawImage(road11,op12)
+
+	road13, _, _ := ebitenutil.NewImageFromFile("roads/roadEW.png", ebiten.FilterDefault)
+	op14 := &ebiten.DrawImageOptions{}
+	op14.GeoM.Translate(float64(mainGameController.screenWidth/2)+120, float64(mainGameController.screenHeight/2)-200)
+	screen.DrawImage(road13,op14)
+
+	road14, _, _ := ebitenutil.NewImageFromFile("roads/roadEW.png", ebiten.FilterDefault)
+	op15 := &ebiten.DrawImageOptions{}
+	op15.GeoM.Translate(float64(mainGameController.screenWidth/2)+40, float64(mainGameController.screenHeight/2)-200)
+	screen.DrawImage(road14,op15)
+
+	road15, _, _ := ebitenutil.NewImageFromFile("roads/roadNS.png", ebiten.FilterDefault)
+	op16 := &ebiten.DrawImageOptions{}
+	op16.GeoM.Translate(float64(mainGameController.screenWidth/2)+120, float64(mainGameController.screenHeight/2)+40)
+	screen.DrawImage(road15,op16)
+
+	road16, _, _ := ebitenutil.NewImageFromFile("roads/roadNE.png", ebiten.FilterDefault)
+	op17 := &ebiten.DrawImageOptions{}
+	op17.GeoM.Translate(float64(mainGameController.screenWidth/2)+120, float64(mainGameController.screenHeight/2)+120)
+	screen.DrawImage(road16,op17)
+
+	road17, _, _ := ebitenutil.NewImageFromFile("roads/roadEW.png", ebiten.FilterDefault)
+	op18 := &ebiten.DrawImageOptions{}
+	op18.GeoM.Translate(float64(mainGameController.screenWidth/2)+200, float64(mainGameController.screenHeight/2)+200)
+	screen.DrawImage(road17,op18)
+
+	road19, _, _ := ebitenutil.NewImageFromFile("roads/roadEW.png", ebiten.FilterDefault)
+	op20 := &ebiten.DrawImageOptions{}
+	op20.GeoM.Translate(float64(mainGameController.screenWidth/2)+200, float64(mainGameController.screenHeight/2)+120)
+	screen.DrawImage(road19,op20)
+
+	road20, _, _ := ebitenutil.NewImageFromFile("roads/roadNW.png", ebiten.FilterDefault)
+	op21 := &ebiten.DrawImageOptions{}
+	op21.GeoM.Translate(float64(mainGameController.screenWidth/2)-200, float64(mainGameController.screenHeight/2)+40)
+	screen.DrawImage(road20,op21)
+
+	road21, _, _ := ebitenutil.NewImageFromFile("roads/roadEW.png", ebiten.FilterDefault)
+	op22 := &ebiten.DrawImageOptions{}
+	op22.GeoM.Translate(float64(mainGameController.screenWidth/2)-280, float64(mainGameController.screenHeight/2)+40)
+	screen.DrawImage(road21,op22)
+
 
 }
 
