@@ -4,15 +4,24 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"os"
+	"image/color"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 	"strconv"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/text"
+	"time"
 )
 
 var gameStarted int 
 var mainGameController gameController
+var normalFont font.Face
+const dpi = 60
 
 //Struct of the semaphores
 type semaphore struct {
@@ -25,12 +34,13 @@ type semaphore struct {
 	positionX float64
 	positionY float64
 	image *ebiten.Image
-	options ebiten.DrawImageOptions
+	options *ebiten.DrawImageOptions
 }
 
 //Struct of the cars
 type car struct {
-	speed       float64
+	speedX       float64
+	speedY       float64
 	start       int
 	destination int
 	//0 car is on route
@@ -38,31 +48,46 @@ type car struct {
 	status int
 	positionX float64
 	positionY float64
+	rotationType int
 	image *ebiten.Image
 	options ebiten.DrawImageOptions
+}
+
+type traficLightController struct {
+	lightsImage        *ebiten.Image
+	lightsOptions      *ebiten.DrawImageOptions
+	positionX int
+	positionY int
+	rotationType int
 }
 
 //Struct of the game controller
 type gameController struct {
 	cars               []car
 	semaphores         []semaphore
+	traficLightControllers []traficLightController
 	numberOfCars       int
 	numberOfSemaphores int
 	screenWidth int 
 	screenHeight int
+	startingPositionsX []float64
+	startingPositionsY []float64
 }
 
 //Function of semaphore
-func semaphoreBehavior(currentSemaphore semaphore) {
+func semaphoreBehavior(carIndex int) {
 	for {
-		if currentSemaphore.counter == 20 {
-			if currentSemaphore.color == 0 {
-				currentSemaphore.color = 1
-			} else if currentSemaphore.color == 1 {
-				currentSemaphore.color = 0
+		//Changin of color
+		if mainGameController.semaphores[carIndex].counter == 8 {
+			if mainGameController.semaphores[carIndex].color == 0 {
+				mainGameController.semaphores[carIndex].color = 1
+			} else if mainGameController.semaphores[carIndex].color == 1 {
+				mainGameController.semaphores[carIndex].color = 0
 			}
+			mainGameController.semaphores[carIndex].counter = 0
 		} else {
-			currentSemaphore.counter++
+			mainGameController.semaphores[carIndex].counter++
+			time.Sleep(1 * time.Second)
 		}
 	}
 }
@@ -70,8 +95,7 @@ func semaphoreBehavior(currentSemaphore semaphore) {
 //Function of car
 func carBehavior(carIndex int) {
 	for {
-		//Movement of the cars
-		mainGameController.cars[carIndex].positionX = mainGameController.cars[carIndex].speed;
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -167,7 +191,105 @@ func drawBoard(screen *ebiten.Image){
 	op22.GeoM.Translate(float64(mainGameController.screenWidth/2)-280, float64(mainGameController.screenHeight/2)+40)
 	screen.DrawImage(road21,op22)
 
+	lights1, _, _ := ebitenutil.NewImageFromFile("roads/light.png", ebiten.FilterDefault)
+	opl1 := &ebiten.DrawImageOptions{}
+	opl1.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)-70)
+	traficLightController1 := traficLightController{
+		lightsImage: lights1,
+		lightsOptions: opl1,
+		positionX: (mainGameController.screenWidth/2)-40,
+		positionY: (mainGameController.screenHeight/2)-70,
+	}
+	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController1)
+	mainGameController.semaphores[0].options = opl1
+	mainGameController.semaphores[0].image = lights1
 
+	lights2, _, _ := ebitenutil.NewImageFromFile("roads/light.png", ebiten.FilterDefault)
+	opl2 := &ebiten.DrawImageOptions{}
+	opl2.GeoM.Translate(float64(mainGameController.screenWidth/2)+125, float64(mainGameController.screenHeight/2)+40)
+	traficLightController2 := traficLightController{
+		lightsImage: lights2,
+		lightsOptions: opl2,
+		positionX: (mainGameController.screenWidth/2)+125,
+		positionY: (mainGameController.screenHeight/2)+40,
+	}
+	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController2)
+	mainGameController.semaphores[1].options = opl2
+	mainGameController.semaphores[1].image = lights2
+	
+
+	lights3, _, _ := ebitenutil.NewImageFromFile("roads/light.png", ebiten.FilterDefault)
+	opl3 := &ebiten.DrawImageOptions{}
+	opl3.GeoM.Translate(float64(mainGameController.screenWidth/2)-40, float64(mainGameController.screenHeight/2)+40)
+	traficLightController3 := traficLightController{
+		lightsImage: lights3,
+		lightsOptions: opl3,
+		positionX: (mainGameController.screenWidth/2)-40,
+		positionY: (mainGameController.screenHeight/2)+40,
+	}
+	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController3)
+	mainGameController.semaphores[2].options = opl3
+	mainGameController.semaphores[2].image = lights3
+
+	lights4, _, _ := ebitenutil.NewImageFromFile("roads/light.png", ebiten.FilterDefault)
+	opl4 := &ebiten.DrawImageOptions{}
+	opl4.GeoM.Translate(float64(mainGameController.screenWidth/2)-200, float64(mainGameController.screenHeight/2)-20)
+	traficLightController4 := traficLightController{
+		lightsImage: lights4,
+		lightsOptions: opl4,
+		positionX: (mainGameController.screenWidth/2)-200,
+		positionY: (mainGameController.screenHeight/2)-20,
+	}
+	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController4)
+	mainGameController.semaphores[3].options = opl4
+	mainGameController.semaphores[3].image = lights4
+	
+	lights5, _, _ := ebitenutil.NewImageFromFile("roads/light2.png", ebiten.FilterDefault)
+	opl5 := &ebiten.DrawImageOptions{}
+	opl5.GeoM.Translate(float64(mainGameController.screenWidth/2)+120, float64(mainGameController.screenHeight/2)-170)
+	traficLightController5 := traficLightController{
+		lightsImage: lights5,
+		lightsOptions: opl5,
+		positionX: (mainGameController.screenWidth/2)+120,
+		positionY: (mainGameController.screenHeight/2)-170,
+	}
+	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController5)
+	mainGameController.semaphores[4].options = opl5
+	mainGameController.semaphores[4].image = lights5
+	
+	lights6, _, _ := ebitenutil.NewImageFromFile("roads/light2.png", ebiten.FilterDefault)
+	opl6 := &ebiten.DrawImageOptions{}
+	opl6.GeoM.Translate(float64(mainGameController.screenWidth/2)+40, float64(mainGameController.screenHeight/2)-10)
+	traficLightController6 := traficLightController{
+		lightsImage: lights6,
+		lightsOptions: opl6,
+		positionX: (mainGameController.screenWidth/2)+40,
+		positionY: (mainGameController.screenHeight/2)-10,
+	}
+	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController6)
+	mainGameController.semaphores[5].options = opl6
+	mainGameController.semaphores[5].image = lights6
+
+	lights7, _, _ := ebitenutil.NewImageFromFile("roads/light2.png", ebiten.FilterDefault)
+	opl7 := &ebiten.DrawImageOptions{}
+	opl7.GeoM.Translate(float64(mainGameController.screenWidth/2)-50, float64(mainGameController.screenHeight/2)-10)
+	traficLightController7 := traficLightController{
+		lightsImage: lights7,
+		lightsOptions: opl7,
+		positionX: (mainGameController.screenWidth/2)-50,
+		positionY: (mainGameController.screenHeight/2)-10,
+	}
+	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController7)
+	mainGameController.semaphores[6].options = opl7
+	mainGameController.semaphores[6].image = lights7
+	
+	//Light1 -40 -40
+	//Light2 200 40
+	//Light3 -40 40
+	//Light4 -200 -40
+	//Light5 40 -200
+	//Light6 -40 -40
+	//Light6 -40 -40
 }
 
 //Game Loo
@@ -178,17 +300,36 @@ func update(screen *ebiten.Image) error {
 
 	//This part of the code draws the static road
 	drawBoard(screen)
-	//This part of the code draws the static road
 
 	//This part of the code draws all the cars in the screen and update the position of the cars
 	for i := 0; i < mainGameController.numberOfCars; i++ {
-		mainGameController.cars[i].options.GeoM.Translate(mainGameController.cars[i].positionX, mainGameController.cars[i].positionY)
+		mainGameController.cars[i].options.GeoM.Translate(mainGameController.cars[i].speedX, mainGameController.cars[i].speedY)
+		if mainGameController.cars[i].status == 1 {
+			tempString := "Carro " + strconv.Itoa(i) + ": Ruta terminada"
+			text.Draw(screen, tempString , normalFont, 15 , int(mainGameController.cars[i].positionY+10)*(i+1)*2, color.White)
+		}else if mainGameController.cars[i].status == 0 {
+			tempString := "Carro " + strconv.Itoa(i) + ": En ruta"
+			text.Draw(screen, tempString, normalFont, 15 , int(mainGameController.cars[i].positionY+10)*(i+1)*2, color.White)
+		}
 		screen.DrawImage(mainGameController.cars[i].image, &mainGameController.cars[i].options)
 	}
+
+	//This part draws the text of the trafic lights
+	for i := 0; i < mainGameController.numberOfSemaphores; i++ {
+		if mainGameController.semaphores[i].color == 1 {
+			text.Draw(screen, "Rojo", normalFont, mainGameController.traficLightControllers[i].positionX , mainGameController.traficLightControllers[i].positionY-7, color.White)
+		}else if mainGameController.semaphores[i].color == 0 {
+			text.Draw(screen, "Verde", normalFont, mainGameController.traficLightControllers[i].positionX , mainGameController.traficLightControllers[i].positionY-7, color.White)
+		}	
+		screen.DrawImage(mainGameController.semaphores[i].image,mainGameController.semaphores[i].options)
+	}
+
 	return nil
 }
 
 func main() {
+	//Initialize seed for real random numbers
+	rand.Seed(time.Now().UnixNano())
 	//Status of the game
 	//0 Game not started
 	//1 Game started
@@ -197,11 +338,35 @@ func main() {
 	//Initialization of game controller
 	mainGameController = gameController{
 		numberOfCars:       5,
-		numberOfSemaphores: 5,
+		numberOfSemaphores: 4,
 		screenWidth: 620,	
 		screenHeight: 400,
 
 	}
+	//Initialization of starting points
+	positionX1 := 0.0
+	positionY1 := 280.0
+
+	positionX2 := 280.0
+	positionY2 := 360.0
+
+	positionX3 := 520.0
+	positionY3 := 360.0
+
+	positionX4 := 520.0
+	positionY4 := 0.0
+
+	mainGameController.startingPositionsX = append(mainGameController.startingPositionsX,positionX1)
+	mainGameController.startingPositionsY = append(mainGameController.startingPositionsY,positionY1)
+
+	mainGameController.startingPositionsX = append(mainGameController.startingPositionsX,positionX2)
+	mainGameController.startingPositionsY = append(mainGameController.startingPositionsY,positionY2)
+
+	mainGameController.startingPositionsX = append(mainGameController.startingPositionsX,positionX3)
+	mainGameController.startingPositionsY = append(mainGameController.startingPositionsY,positionY3)
+
+	mainGameController.startingPositionsX = append(mainGameController.startingPositionsX,positionX4)
+	mainGameController.startingPositionsY = append(mainGameController.startingPositionsY,positionY4)
 	//Options opened flag
 	optionsOpen := false
 	for gameStarted != 3 {
@@ -214,38 +379,67 @@ func main() {
 		input.Scan()
 		option := input.Text()
 		if option == "1" {
+			tt, err := opentype.Parse(fonts.MPlus1pRegular_ttf)
+			if err != nil {
+				log.Fatal(err)
+			}
+			normalFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+				Size:    12,
+				DPI:     dpi,
+				Hinting: font.HintingFull,
+			})
 			for i := 0; i < mainGameController.numberOfCars; i++ {
 				//Default values for cars
+				randomPosition := (rand.Intn(4) + 0)
 				currentImage, _, err := ebitenutil.NewImageFromFile("roads/car.png", ebiten.FilterDefault)
 				if err != nil {
 					log.Fatal(err)
 				}
 				tempCar := car{
 					//Random speed from 1 to 10
-					speed: (rand.Float64() * (10-1)),
+					speedX: (rand.Float64() * (2.5-.8)),
+					//speedY: (rand.Float64() * (2.5-.8)),
+					speedY: 0,
 					status: 0,
+					start: randomPosition,
+					rotationType: 0,
 					//Image of the car
 					image: currentImage,
-					positionX: 0.0,
-					positionY: 0.0,
+					positionX: 0,
+					positionY: 0,
 					//Draw Options of the car
 					options: ebiten.DrawImageOptions{},
 				}
 				mainGameController.cars = append(mainGameController.cars, tempCar)
+				if randomPosition == 0{
+					mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*360))
+					mainGameController.cars[i].rotationType = 0;
+				}else if randomPosition == 1{
+					mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*180))
+					mainGameController.cars[i].rotationType = 1;
+				}else if randomPosition == 2{
+					mainGameController.cars[i].rotationType = 2;
+				}else if randomPosition == 3{
+					mainGameController.cars[i].rotationType = 3;
+					mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+				}
+				mainGameController.cars[i].options.GeoM.Translate(mainGameController.startingPositionsX[randomPosition], mainGameController.startingPositionsY[randomPosition])
 				go carBehavior(i)
 			}
-			for i := 0; i < mainGameController.numberOfSemaphores; i++ {
+			for i := 0; i < 7; i++ {
 				//Default values for semaphores
 				tempSemaphore := semaphore{
-					//Random speed from 1 to 10
-					color:   (rand.Intn(2) + 1),
+					//Random color from 1 to 0
+					color:   (rand.Intn(2) + 0),
 					counter: 0,
 				}
 				mainGameController.semaphores = append(mainGameController.semaphores, tempSemaphore)
+				go semaphoreBehavior(i)
 			}
 			if err := ebiten.Run(update, mainGameController.screenWidth, mainGameController.screenHeight, 2, "Traffic Simulator"); err != nil {
 				log.Fatal(err)
 			}
+
 			gameStarted = 3
 			fmt.Println(" ")
 		} else if option == "2" {
@@ -284,6 +478,7 @@ func main() {
 					fmt.Println(" ")
 				} else {
 					fmt.Println("Please select a valid option")
+					fmt.Println(" ")
 					fmt.Println(" ")
 				}
 			}
