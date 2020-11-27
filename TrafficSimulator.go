@@ -41,16 +41,23 @@ type semaphore struct {
 type car struct {
 	speedX       float64
 	speedY       float64
-	start       int
-	destination int
+	carRoute		route
 	//0 car is on route
 	//1 car arrived
 	status int
 	positionX float64
 	positionY float64
+	routeNumber int
 	rotationType int
 	image *ebiten.Image
 	options ebiten.DrawImageOptions
+}
+
+type route struct {
+	startX float64
+	startY float64
+	destinationX float64
+	destinationY float64
 }
 
 type traficLightController struct {
@@ -72,13 +79,15 @@ type gameController struct {
 	screenHeight int
 	startingPositionsX []float64
 	startingPositionsY []float64
+	endingPositionsX []float64
+	endingPositionsY []float64
 }
 
 //Function of semaphore
 func semaphoreBehavior(carIndex int) {
 	for {
 		//Changin of color
-		if mainGameController.semaphores[carIndex].counter == 8 {
+		if mainGameController.semaphores[carIndex].counter == 6 {
 			if mainGameController.semaphores[carIndex].color == 0 {
 				mainGameController.semaphores[carIndex].color = 1
 			} else if mainGameController.semaphores[carIndex].color == 1 {
@@ -304,12 +313,18 @@ func update(screen *ebiten.Image) error {
 	//This part of the code draws all the cars in the screen and update the position of the cars
 	for i := 0; i < mainGameController.numberOfCars; i++ {
 		mainGameController.cars[i].options.GeoM.Translate(mainGameController.cars[i].speedX, mainGameController.cars[i].speedY)
+		mainGameController.cars[i].positionX += mainGameController.cars[i].speedX
+		mainGameController.cars[i].positionY += mainGameController.cars[i].speedY
 		if mainGameController.cars[i].status == 1 {
-			tempString := "Carro " + strconv.Itoa(i) + ": Ruta terminada"
-			text.Draw(screen, tempString , normalFont, 15 , int(mainGameController.cars[i].positionY+10)*(i+1)*2, color.White)
+			tempString := "Carro " + strconv.Itoa(i) + ": Ruta terminada  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedX)
+			text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
 		}else if mainGameController.cars[i].status == 0 {
-			tempString := "Carro " + strconv.Itoa(i) + ": En ruta"
-			text.Draw(screen, tempString, normalFont, 15 , int(mainGameController.cars[i].positionY+10)*(i+1)*2, color.White)
+			tempString := "Carro " + strconv.Itoa(i) + ": En ruta  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedX)
+			text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
+		}
+		//Decisions made in base of the position, rotation and destination of car
+		if(mainGameController.cars[i].speedX > 0 && mainGameController.cars[i].speedY == 0.0 && mainGameController.cars[i].rotationType == 0 ){
+			
 		}
 		screen.DrawImage(mainGameController.cars[i].image, &mainGameController.cars[i].options)
 	}
@@ -343,18 +358,39 @@ func main() {
 		screenHeight: 400,
 
 	}
-	//Initialization of starting points
-	positionX1 := 0.0
+
+	//Initialization of starting points and ending points for the routes
+	/*
+		Routes
+		1-Left to right
+		2-Bottom to top
+		3-right to bottom
+		4-Up to left
+	*/
+	positionX1 := 10.0
 	positionY1 := 280.0
 
-	positionX2 := 280.0
+	positionX2 := 310.0
 	positionY2 := 360.0
 
 	positionX3 := 520.0
 	positionY3 := 360.0
 
-	positionX4 := 520.0
-	positionY4 := 0.0
+	positionX4 := 530.0
+	positionY4 := 30.0
+
+	//Ending postions
+	epositionX1 := 530.0
+	epositionY1 := 30.0
+
+	epositionX2 := 530.0
+	epositionY2 := 30.0
+
+	epositionX3 := 310.0
+	epositionY3 := 360.0
+
+	epositionX4 := 10.0
+	epositionY4 := 280.0
 
 	mainGameController.startingPositionsX = append(mainGameController.startingPositionsX,positionX1)
 	mainGameController.startingPositionsY = append(mainGameController.startingPositionsY,positionY1)
@@ -367,6 +403,21 @@ func main() {
 
 	mainGameController.startingPositionsX = append(mainGameController.startingPositionsX,positionX4)
 	mainGameController.startingPositionsY = append(mainGameController.startingPositionsY,positionY4)
+
+	//Ending positions
+	mainGameController.endingPositionsX = append(mainGameController.endingPositionsX,epositionX1)
+	mainGameController.endingPositionsY = append(mainGameController.endingPositionsY,epositionY1)
+
+	mainGameController.endingPositionsX = append(mainGameController.endingPositionsX,epositionX2)
+	mainGameController.endingPositionsY = append(mainGameController.endingPositionsY,epositionY2)
+
+	mainGameController.endingPositionsX = append(mainGameController.endingPositionsX,epositionX3)
+	mainGameController.endingPositionsY = append(mainGameController.endingPositionsY,epositionY3)
+
+	mainGameController.endingPositionsX = append(mainGameController.endingPositionsX,epositionX4)
+	mainGameController.endingPositionsY = append(mainGameController.endingPositionsY,epositionY4)
+
+
 	//Options opened flag
 	optionsOpen := false
 	for gameStarted != 3 {
@@ -395,14 +446,21 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
+				tempRoute := route{
+					startX: mainGameController.startingPositionsX[randomPosition],
+					startY: mainGameController.startingPositionsY[randomPosition],
+					destinationX: mainGameController.endingPositionsX[randomPosition],
+					destinationY: mainGameController.endingPositionsY[randomPosition],
+				}
 				tempCar := car{
 					//Random speed from 1 to 10
-					speedX: (rand.Float64() * (2.5-.8)),
+					speedX: (1 + rand.Float64() * (2-1)),
 					//speedY: (rand.Float64() * (2.5-.8)),
 					speedY: 0,
 					status: 0,
-					start: randomPosition,
 					rotationType: 0,
+					carRoute: tempRoute,
+					routeNumber: randomPosition,
 					//Image of the car
 					image: currentImage,
 					positionX: 0,
@@ -415,15 +473,21 @@ func main() {
 					mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*360))
 					mainGameController.cars[i].rotationType = 0;
 				}else if randomPosition == 1{
+					mainGameController.cars[i].speedX = 0
+					mainGameController.cars[i].speedY = -(1 + rand.Float64() * (2-1))
 					mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*180))
 					mainGameController.cars[i].rotationType = 1;
 				}else if randomPosition == 2{
+					mainGameController.cars[i].speedX = -(1 + rand.Float64() * (2-1))
+					mainGameController.cars[i].speedY = 0
 					mainGameController.cars[i].rotationType = 2;
 				}else if randomPosition == 3{
+					mainGameController.cars[i].speedX = 0
+					mainGameController.cars[i].speedY = (1 + rand.Float64() * (2-1))
 					mainGameController.cars[i].rotationType = 3;
 					mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
 				}
-				mainGameController.cars[i].options.GeoM.Translate(mainGameController.startingPositionsX[randomPosition], mainGameController.startingPositionsY[randomPosition])
+				mainGameController.cars[i].options.GeoM.Translate(mainGameController.cars[i].carRoute.startX, mainGameController.cars[i].carRoute.startY)
 				go carBehavior(i)
 			}
 			for i := 0; i < 7; i++ {
