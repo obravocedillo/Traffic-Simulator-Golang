@@ -54,6 +54,8 @@ type car struct {
 	image *ebiten.Image
 	options ebiten.DrawImageOptions
 	lastStep bool
+	alreadySlowed bool
+	slowedCounter int
 }
 
 type route struct {
@@ -107,7 +109,73 @@ func semaphoreBehavior(carIndex int) {
 //Function of car
 func carBehavior(carIndex int) {
 	for {
-		time.Sleep(1 * time.Second)
+		if(gameStarted == 3){
+			for i := 0; i < mainGameController.numberOfCars; i++ {
+				if((mainGameController.cars[carIndex].routeNumber == mainGameController.cars[i].routeNumber) && (carIndex != i)){
+					if((mainGameController.cars[carIndex].positionX - mainGameController.cars[i].positionX < 10) && mainGameController.cars[carIndex].alreadySlowed == false){
+						if(mainGameController.cars[carIndex].positionX<mainGameController.cars[i].positionX){
+							if(mainGameController.cars[carIndex].speedX > 0){
+								mainGameController.cars[carIndex].speedX = 0 
+								time.Sleep(2 * time.Second)
+								if(mainGameController.cars[carIndex].startingSpeedX == 0){
+									mainGameController.cars[carIndex].speedX = -mainGameController.cars[carIndex].startingSpeedY
+								}else{
+									mainGameController.cars[carIndex].speedX = mainGameController.cars[carIndex].startingSpeedX
+								}
+								mainGameController.cars[carIndex].slowedCounter += 1
+								if(mainGameController.cars[carIndex].slowedCounter <= 1){
+									mainGameController.cars[carIndex].alreadySlowed = true
+								}
+							}else if(mainGameController.cars[carIndex].speedX < 0){
+								mainGameController.cars[carIndex].speedX = 0
+								time.Sleep(2 * time.Second)
+								if(mainGameController.cars[carIndex].startingSpeedX == 0){
+									mainGameController.cars[carIndex].speedX = -mainGameController.cars[carIndex].startingSpeedY
+								}else{
+									mainGameController.cars[carIndex].speedX = mainGameController.cars[carIndex].startingSpeedX
+								}
+								mainGameController.cars[carIndex].slowedCounter += 1
+								if(mainGameController.cars[carIndex].slowedCounter <= 1){
+									mainGameController.cars[carIndex].alreadySlowed = true
+								}
+							}
+						}
+					}
+				}
+
+				if((mainGameController.cars[carIndex].routeNumber == mainGameController.cars[i].routeNumber) && (carIndex != i)){
+					if((mainGameController.cars[carIndex].positionY - mainGameController.cars[i].positionY < 10) && mainGameController.cars[carIndex].alreadySlowed == false){
+						if(mainGameController.cars[carIndex].positionY<mainGameController.cars[i].positionY){
+							if(mainGameController.cars[carIndex].speedY > 0){
+								mainGameController.cars[carIndex].speedY = 0 
+								time.Sleep(2 * time.Second)
+								if(mainGameController.cars[carIndex].startingSpeedY == 0){
+									mainGameController.cars[carIndex].speedY = -mainGameController.cars[carIndex].startingSpeedX
+								}else{
+									mainGameController.cars[carIndex].speedY = mainGameController.cars[carIndex].startingSpeedY
+								}
+								mainGameController.cars[carIndex].slowedCounter += 1
+								if(mainGameController.cars[carIndex].slowedCounter <= 1){
+									mainGameController.cars[carIndex].alreadySlowed = true
+								}
+							}else if(mainGameController.cars[carIndex].speedY < 0){
+								mainGameController.cars[carIndex].speedY = 0
+								time.Sleep(2 * time.Second)
+								if(mainGameController.cars[carIndex].startingSpeedY == 0){
+									mainGameController.cars[carIndex].speedY = -mainGameController.cars[carIndex].startingSpeedX
+								}else{
+									mainGameController.cars[carIndex].speedY = mainGameController.cars[carIndex].startingSpeedY
+								}
+								mainGameController.cars[carIndex].slowedCounter += 1
+								if(mainGameController.cars[carIndex].slowedCounter <= 1){
+									mainGameController.cars[carIndex].alreadySlowed = true
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -345,7 +413,6 @@ func update(screen *ebiten.Image) error {
 			mainGameController.cars[i].rotationType = 3
 			mainGameController.cars[i].speedX = 0
 			mainGameController.cars[i].speedY = mainGameController.cars[i].startingSpeedX
-			mainGameController.cars[i].lastStep = true
 		}
 		if(mainGameController.cars[i].speedY > 0 && mainGameController.cars[i].speedX == 0.0 && mainGameController.cars[i].rotationType == 3 && mainGameController.cars[i].positionX >= 470.00 && mainGameController.cars[i].positionY >= 80.00 && mainGameController.cars[i].routeNumber == 0){
 			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*180))
@@ -386,6 +453,58 @@ func update(screen *ebiten.Image) error {
 		}
 		//Route2
 
+		//Route3
+		//Decisions made in base of the position, rotation and destination of car
+		if mainGameController.cars[i].lastStep == false && mainGameController.cars[i].speedX <= 0 && mainGameController.cars[i].speedY == 0.0 && mainGameController.cars[i].positionX <= -60 && mainGameController.cars[i].routeNumber == 2 {
+			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+			mainGameController.cars[i].speedX = 0
+			mainGameController.cars[i].speedY = mainGameController.cars[i].startingSpeedX
+			mainGameController.cars[i].rotationType = 1
+		}
+		if mainGameController.cars[i].lastStep == false && mainGameController.cars[i].speedX == 0 && mainGameController.cars[i].speedY <= 0.0 && mainGameController.cars[i].rotationType == 1 && mainGameController.cars[i].positionY <= -160 && mainGameController.cars[i].routeNumber == 2 {
+			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+			mainGameController.cars[i].speedX = mainGameController.cars[i].startingSpeedX
+			mainGameController.cars[i].speedY = 0
+			mainGameController.cars[i].rotationType = 2
+		}
+		if mainGameController.cars[i].lastStep == false && mainGameController.cars[i].speedX <= 0 && mainGameController.cars[i].speedY == 0.0 && mainGameController.cars[i].rotationType == 2 && mainGameController.cars[i].positionX <= -235 && mainGameController.cars[i].routeNumber == 2 {
+			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+			mainGameController.cars[i].speedX = 0
+			mainGameController.cars[i].speedY = -mainGameController.cars[i].startingSpeedX
+			mainGameController.cars[i].rotationType = 3
+			mainGameController.cars[i].lastStep = true
+		}
+
+		if mainGameController.cars[i].speedX == 0 && mainGameController.cars[i].speedY >= 0.0 && mainGameController.cars[i].rotationType == 3 && mainGameController.cars[i].positionY >= 20 && mainGameController.cars[i].routeNumber == 2 {
+			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+			mainGameController.cars[i].speedX = 0
+			mainGameController.cars[i].speedY = 0
+			mainGameController.cars[i].status = 1
+		}
+		//Route3
+
+		//Route4
+		//Decisions made in base of the position, rotation and destination of car
+		if mainGameController.cars[i].speedX == 0 && mainGameController.cars[i].speedY > 0.0 && mainGameController.cars[i].rotationType == 3 && mainGameController.cars[i].positionY >= 15 && mainGameController.cars[i].routeNumber == 3 {
+			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+			mainGameController.cars[i].speedX = -mainGameController.cars[i].startingSpeedY
+			mainGameController.cars[i].speedY = 0
+			mainGameController.cars[i].rotationType = 2
+		}
+		if mainGameController.cars[i].speedX < 0 && mainGameController.cars[i].speedY == 0.0 && mainGameController.cars[i].rotationType == 2 && mainGameController.cars[i].positionX <= -235.00 && mainGameController.cars[i].routeNumber == 3 {
+			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+			mainGameController.cars[i].speedX = 0
+			mainGameController.cars[i].speedY = mainGameController.cars[i].startingSpeedY
+			mainGameController.cars[i].rotationType = 3
+		}
+		if mainGameController.cars[i].speedX == 0 && mainGameController.cars[i].speedY >= 0.0 && mainGameController.cars[i].rotationType == 3 && mainGameController.cars[i].positionY >= 365.00 && mainGameController.cars[i].routeNumber == 3 {
+			//mainGameController.cars[i].options.GeoM.Rotate(float64((math.Pi / 360)*540))
+			mainGameController.cars[i].speedX = 0
+			mainGameController.cars[i].speedY = 0
+			mainGameController.cars[i].status = 1
+		}
+		//Route4
+
 		screen.DrawImage(mainGameController.cars[i].image, &mainGameController.cars[i].options)
 	}
 
@@ -424,7 +543,7 @@ func main() {
 		1-Left to right
 		2-Bottom to top
 		3-right to bottom
-		4-Up to left
+		4-Up to bottom
 	*/
 	positionX1 := 10.0
 	positionY1 := 295.0
@@ -433,7 +552,7 @@ func main() {
 	positionY2 := 360.0
 
 	positionX3 := 520.0
-	positionY3 := 360.0
+	positionY3 := 340.0
 
 	positionX4 := 530.0
 	positionY4 := 30.0
@@ -511,7 +630,7 @@ func main() {
 					destinationX: mainGameController.endingPositionsX[randomPosition],
 					destinationY: mainGameController.endingPositionsY[randomPosition],
 				}
-				tempSpeed := (1 + rand.Float64() * (2-1))
+				tempSpeed := (1.5 + rand.Float64() * (2.5-1.5))
 				tempCar := car{
 					//Random speed from 1 to 10
 					speedX: tempSpeed,
@@ -530,6 +649,8 @@ func main() {
 					//Draw Options of the car
 					options: ebiten.DrawImageOptions{},
 					lastStep: false,
+					alreadySlowed: false,
+					slowedCounter: 0,
 				}
 				mainGameController.cars = append(mainGameController.cars, tempCar)
 				if randomPosition == 0{
@@ -573,10 +694,10 @@ func main() {
 				mainGameController.semaphores = append(mainGameController.semaphores, tempSemaphore)
 				go semaphoreBehavior(i)
 			}
+			gameStarted = 3
 			if err := ebiten.Run(update, mainGameController.screenWidth, mainGameController.screenHeight, 2, "Traffic Simulator"); err != nil {
 				log.Fatal(err)
 			}
-			gameStarted = 3
 			fmt.Println(" ")
 		} else if option == "2" {
 			optionsOpen = true
