@@ -56,6 +56,7 @@ type car struct {
 	lastStep bool
 	alreadySlowed bool
 	slowedCounter int
+	negative bool
 }
 
 type route struct {
@@ -86,6 +87,11 @@ type gameController struct {
 	startingPositionsY []float64
 	endingPositionsX []float64
 	endingPositionsY []float64
+	stopsPositionX []float64
+	stopsPositionY []float64
+	//0 = X
+	//1 = Y
+	stopsType []int
 }
 
 //Function of semaphore
@@ -307,6 +313,7 @@ func drawBoard(screen *ebiten.Image){
 		positionX: (mainGameController.screenWidth/2)-40,
 		positionY: (mainGameController.screenHeight/2)+40,
 	}
+
 	mainGameController.traficLightControllers = append(mainGameController.traficLightControllers, traficLightController3)
 	mainGameController.semaphores[2].options = opl3
 	mainGameController.semaphores[2].image = lights3
@@ -370,9 +377,38 @@ func drawBoard(screen *ebiten.Image){
 	//Light5 40 -200
 	//Light6 -40 -40
 	//Light6 -40 -40
+
+	//Lights position and type
+	mainGameController.stopsPositionX = append(mainGameController.stopsPositionX,float64(mainGameController.screenWidth/2)-40)
+	mainGameController.stopsPositionY = append(mainGameController.stopsPositionY,float64(mainGameController.screenHeight/2)-70)
+	mainGameController.stopsType = append(mainGameController.stopsType,1)
+
+	mainGameController.stopsPositionX = append(mainGameController.stopsPositionX,float64(mainGameController.screenWidth/2)+125)
+	mainGameController.stopsPositionY = append(mainGameController.stopsPositionY,float64(mainGameController.screenHeight/2)+40)
+	mainGameController.stopsType = append(mainGameController.stopsType,1)
+
+	mainGameController.stopsPositionX = append(mainGameController.stopsPositionX,float64(mainGameController.screenWidth/2)-40)
+	mainGameController.stopsPositionY = append(mainGameController.stopsPositionY,float64(mainGameController.screenHeight/2)+40)
+	mainGameController.stopsType = append(mainGameController.stopsType,1)
+
+	mainGameController.stopsPositionX = append(mainGameController.stopsPositionX,float64(mainGameController.screenWidth/2)-200)
+	mainGameController.stopsPositionY = append(mainGameController.stopsPositionY,float64(mainGameController.screenHeight/2)-20)
+	mainGameController.stopsType = append(mainGameController.stopsType,1)
+	 
+	mainGameController.stopsPositionX = append(mainGameController.stopsPositionX,float64(mainGameController.screenWidth/2)+120)
+	mainGameController.stopsPositionY = append(mainGameController.stopsPositionY,float64(mainGameController.screenHeight/2)-170)
+	mainGameController.stopsType = append(mainGameController.stopsType,0)
+
+	mainGameController.stopsPositionX = append(mainGameController.stopsPositionX,float64(mainGameController.screenWidth/2)+40)
+	mainGameController.stopsPositionY = append(mainGameController.stopsPositionY,float64(mainGameController.screenHeight/2)-10)
+	mainGameController.stopsType = append(mainGameController.stopsType,0)
+
+	mainGameController.stopsPositionX = append(mainGameController.stopsPositionX,float64(mainGameController.screenWidth/2)-50)
+	mainGameController.stopsPositionY = append(mainGameController.stopsPositionY,float64(mainGameController.screenHeight/2)-10)
+	mainGameController.stopsType = append(mainGameController.stopsType,0)
 }
 
-//Game Loo
+//Game Loop
 func update(screen *ebiten.Image) error {
 	if ebiten.IsDrawingSkipped() {
 		return nil
@@ -387,11 +423,21 @@ func update(screen *ebiten.Image) error {
 		mainGameController.cars[i].positionX += mainGameController.cars[i].speedX
 		mainGameController.cars[i].positionY += mainGameController.cars[i].speedY
 		if mainGameController.cars[i].status == 1 {
-			tempString := "Carro " + strconv.Itoa(i) + ": Ruta terminada  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedX)
-			text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
+			if(mainGameController.cars[i].speedY == 0.0){
+				tempString := "Carro " + strconv.Itoa(i) + ": Ruta terminada  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedX)
+				text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
+			}else if(mainGameController.cars[i].speedX == 0.0){
+				tempString := "Carro " + strconv.Itoa(i) + ": Ruta terminada  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedY)
+				text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
+			}
 		}else if mainGameController.cars[i].status == 0 {
-			tempString := "Carro " + strconv.Itoa(i) + ": En ruta  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedX)
-			text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
+			if(mainGameController.cars[i].speedY == 0.0){
+				tempString := "Carro " + strconv.Itoa(i) + ": En ruta  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedX)
+				text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
+			}else if(mainGameController.cars[i].speedX == 0.0){
+				tempString := "Carro " + strconv.Itoa(i) + ": En ruta  velocidad: " + fmt.Sprintf("%f", mainGameController.cars[i].speedY)
+				text.Draw(screen, tempString , normalFont, 15 ,10*(i+1)*2, color.White)
+			}
 		}
 
 		//Route1
@@ -505,6 +551,59 @@ func update(screen *ebiten.Image) error {
 		}
 		//Route4
 
+		//Light1 -40 -40
+		//Light2 200 40
+		//Light3 -40 40
+		//Light4 -200 -40
+		//Light5 40 -200
+		//Light6 -40 -40
+		//Light6 -40 -40
+
+	
+		//Stop in traffic lights
+		//route1
+		if(mainGameController.cars[i].routeNumber == 0){
+			fmt.Println(mainGameController.cars[i].positionY)
+		}
+
+		if(mainGameController.cars[i].routeNumber == 0 && mainGameController.cars[i].positionY<=-50&& mainGameController.cars[i].positionY>=-54){
+			if(mainGameController.semaphores[3].color == 1){
+				mainGameController.cars[i].speedY = 0
+			}else{
+				if(mainGameController.cars[i].startingSpeedY == 0){
+					mainGameController.cars[i].speedY = -mainGameController.cars[i].startingSpeedX
+				}else{
+					mainGameController.cars[i].speedY = mainGameController.cars[i].startingSpeedY
+				}
+			}	
+		}
+
+		if(mainGameController.cars[i].routeNumber == 0 && mainGameController.cars[i].positionX>=220&& mainGameController.cars[i].positionX<=225){
+			if(mainGameController.semaphores[3].color == 1){
+				mainGameController.cars[i].speedX = 0
+			}else{
+				if(mainGameController.cars[i].startingSpeedX == 0){
+					mainGameController.cars[i].speedX = -mainGameController.cars[i].startingSpeedY
+				}else{
+					mainGameController.cars[i].speedX = mainGameController.cars[i].startingSpeedX
+				}
+			}	
+		}
+
+		/*
+		if(mainGameController.semaphores[k].color == 1){
+			mainGameController.cars[i].speedX = 0
+		}else{
+			if(mainGameController.cars[i].startingSpeedX == 0){
+				mainGameController.cars[i].speedX = mainGameController.cars[i].startingSpeedY
+			}else{
+				mainGameController.cars[i].speedX = mainGameController.cars[i].startingSpeedX
+			}
+		}
+		*/
+
+		//Stop in traffic lights
+
 		screen.DrawImage(mainGameController.cars[i].image, &mainGameController.cars[i].options)
 	}
 
@@ -532,7 +631,7 @@ func main() {
 	//Initialization of game controller
 	mainGameController = gameController{
 		numberOfCars:       5,
-		numberOfSemaphores: 4,
+		numberOfSemaphores: 7,
 		screenWidth: 620,	
 		screenHeight: 400,
 	}
