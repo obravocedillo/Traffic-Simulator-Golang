@@ -386,8 +386,6 @@ func update(screen *ebiten.Image) error {
 		}
 		//Route2
 
-		
-
 		screen.DrawImage(mainGameController.cars[i].image, &mainGameController.cars[i].options)
 	}
 
@@ -418,7 +416,6 @@ func main() {
 		numberOfSemaphores: 4,
 		screenWidth: 620,	
 		screenHeight: 400,
-
 	}
 
 	//Initialization of starting points and ending points for the routes
