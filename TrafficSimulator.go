@@ -34,7 +34,7 @@ type semaphore struct {
 	positionX float64
 	positionY float64
 	image *ebiten.Image
-	options *ebiten.DrawImageOptions
+	options *ebiten.DrawImageOptiorsns
 }
 
 //Struct of the cars
@@ -935,7 +935,7 @@ func main() {
 						fmt.Println(" ")
 					}
 				} else if specificOption == "2" {
-					fmt.Print("Select the number of semaphores: ")
+					fmt.Print("Select the number of traffic lights: ")
 					input := bufio.NewScanner(os.Stdin)
 					input.Scan()
 					specificOptionSemaphores,_ := strconv.Atoi(input.Text())
