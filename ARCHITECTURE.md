@@ -15,3 +15,6 @@ We use 5 different structs for our simulator<br/>
 ![alt text](https://raw.githubusercontent.com/obravocedillo/Traffic-Simulator-Golang/main/TrafficSimulatorStructs.png)
 
 ## Main Flow
+Main flow of our traffic simulator
+![alt text](https://github.com/obravocedillo/Traffic-Simulator-Golang/raw/main/TrafficSimulatorDIagram.png)
+
