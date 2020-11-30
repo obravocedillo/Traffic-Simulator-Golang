@@ -54,8 +54,7 @@ type car struct {
 	image *ebiten.Image
 	options ebiten.DrawImageOptions
 	lastStep bool
-	alreadySlowed bool
-	slowedCounter int
+	alreadyStopped bool
 	negative bool
 	//Time taken to car to start route
 	startTime int
@@ -122,72 +121,31 @@ func carBehavior(carIndex int) {
 				mainGameController.cars[carIndex].startTime --;
 				time.Sleep(1 * time.Second)
 			}
-			for i := 0; i < mainGameController.numberOfCars; i++ {
-				tempStop := 1 + carIndex
-				if((mainGameController.cars[carIndex].routeNumber == mainGameController.cars[i].routeNumber) && (carIndex != i)){
-					if((mainGameController.cars[carIndex].positionX - mainGameController.cars[i].positionX < 5) && mainGameController.cars[carIndex].alreadySlowed == false){
-						if(mainGameController.cars[carIndex].positionX<mainGameController.cars[i].positionX){
-							if(mainGameController.cars[carIndex].speedX > 0){
-								mainGameController.cars[carIndex].speedX = 0 
-								time.Sleep(time.Duration(tempStop) * time.Second)
-								if(mainGameController.cars[carIndex].startingSpeedX == 0){
-									mainGameController.cars[carIndex].speedX = -mainGameController.cars[carIndex].startingSpeedY
-								}else{
-									mainGameController.cars[carIndex].speedX = mainGameController.cars[carIndex].startingSpeedX
-								}
-								mainGameController.cars[carIndex].slowedCounter += 1
-								if(mainGameController.cars[carIndex].slowedCounter >= 1){
-									mainGameController.cars[carIndex].alreadySlowed = true
-								}
-							}else if(mainGameController.cars[carIndex].speedX < 0){
-								mainGameController.cars[carIndex].speedX = 0
-								time.Sleep(time.Duration(tempStop) * time.Second)
-								if(mainGameController.cars[carIndex].startingSpeedX == 0){
-									mainGameController.cars[carIndex].speedX = -mainGameController.cars[carIndex].startingSpeedY
-								}else{
-									mainGameController.cars[carIndex].speedX = mainGameController.cars[carIndex].startingSpeedX
-								}
-								mainGameController.cars[carIndex].slowedCounter += 1
-								if(mainGameController.cars[carIndex].slowedCounter <= 1){
-									mainGameController.cars[carIndex].alreadySlowed = true
-								}
-							}
-						}
+	
+			if(mainGameController.cars[carIndex].alreadyStopped == true){
+				//Slow car moving in x axis
+				if(mainGameController.cars[carIndex].speedX != 0 && mainGameController.cars[carIndex].speedY == 0){
+					tempOldVelocity := mainGameController.cars[carIndex].speedX
+					if(mainGameController.cars[carIndex].speedX>0){
+						mainGameController.cars[carIndex].speedX = mainGameController.cars[carIndex].speedX - (mainGameController.cars[carIndex].speedX * .90)
+					}else{
+						mainGameController.cars[carIndex].speedX = mainGameController.cars[carIndex].speedX + (math.Abs(mainGameController.cars[carIndex].speedX) * .90)
 					}
-				}
-
-				if((mainGameController.cars[carIndex].routeNumber == mainGameController.cars[i].routeNumber) && (carIndex != i)){
-					if((mainGameController.cars[carIndex].positionY - mainGameController.cars[i].positionY < 10) && mainGameController.cars[carIndex].alreadySlowed == false){
-						if(mainGameController.cars[carIndex].positionY<mainGameController.cars[i].positionY){
-							if(mainGameController.cars[carIndex].speedY > 0){
-								mainGameController.cars[carIndex].speedY = 0 
-								time.Sleep(time.Duration(tempStop) * time.Second)
-								if(mainGameController.cars[carIndex].startingSpeedY == 0){
-									mainGameController.cars[carIndex].speedY = -mainGameController.cars[carIndex].startingSpeedX
-								}else{
-									mainGameController.cars[carIndex].speedY = mainGameController.cars[carIndex].startingSpeedY
-								}
-								mainGameController.cars[carIndex].slowedCounter += 1
-								if(mainGameController.cars[carIndex].slowedCounter >= 1){
-									mainGameController.cars[carIndex].alreadySlowed = true
-								}
-							}else if(mainGameController.cars[carIndex].speedY < 0){
-								mainGameController.cars[carIndex].speedY = 0
-								time.Sleep(time.Duration(tempStop) * time.Second)
-								if(mainGameController.cars[carIndex].startingSpeedY == 0){
-									mainGameController.cars[carIndex].speedY = -mainGameController.cars[carIndex].startingSpeedX
-								}else{
-									mainGameController.cars[carIndex].speedY = mainGameController.cars[carIndex].startingSpeedY
-								}
-								mainGameController.cars[carIndex].slowedCounter += 1
-								if(mainGameController.cars[carIndex].slowedCounter >= 1){
-									mainGameController.cars[carIndex].alreadySlowed = true
-								}
-							}
-						}
+					
+					time.Sleep(3 * time.Second)
+					mainGameController.cars[carIndex].speedX = tempOldVelocity
+				}else if(mainGameController.cars[carIndex].speedX == 0 && mainGameController.cars[carIndex].speedY != 0){
+					tempOldVelocity := mainGameController.cars[carIndex].speedY
+					if(mainGameController.cars[carIndex].speedY>0){
+						mainGameController.cars[carIndex].speedY = mainGameController.cars[carIndex].speedY - (mainGameController.cars[carIndex].speedY * .95)
+					}else{
+						mainGameController.cars[carIndex].speedY = mainGameController.cars[carIndex].speedY + (math.Abs(mainGameController.cars[carIndex].speedY) * .95)
 					}
+					time.Sleep(3 * time.Second)
+					mainGameController.cars[carIndex].speedY = tempOldVelocity
 				}
 			}
+
 		}
 	}
 }
@@ -573,7 +531,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 0 && mainGameController.cars[i].positionY <= -50 && mainGameController.cars[i].positionY >= -54 && mainGameController.cars[i].rotationType == 1{
 				if mainGameController.semaphores[3].color == 1 {
 					mainGameController.cars[i].speedY = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 0 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 0 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedY == 0 {
 						mainGameController.cars[i].speedY = -mainGameController.cars[i].startingSpeedX
 					} else {
@@ -585,7 +553,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 0 && mainGameController.cars[i].positionX >= 245 && mainGameController.cars[i].positionX <= 250 {
 				if mainGameController.semaphores[6].color == 1 {
 					mainGameController.cars[i].speedX = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 0 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 0 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedX == 0 {
 						mainGameController.cars[i].speedX = -mainGameController.cars[i].startingSpeedY
 					} else {
@@ -599,7 +577,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 1 && mainGameController.cars[i].positionY <= -95 && mainGameController.cars[i].positionY >= -105 {
 				if mainGameController.semaphores[2].color == 1 {
 					mainGameController.cars[i].speedY = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 1 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 1 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedX == 0 {
 						mainGameController.cars[i].speedY = mainGameController.cars[i].startingSpeedY
 					} else {
@@ -611,7 +599,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 1 && mainGameController.cars[i].positionX >= 100 && mainGameController.cars[i].positionX <= 110 {
 				if mainGameController.semaphores[4].color == 1 {
 					mainGameController.cars[i].speedX = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 1 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 1 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedY == 0 {
 						mainGameController.cars[i].speedX = mainGameController.cars[i].startingSpeedX
 					} else {
@@ -626,7 +624,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 2 && mainGameController.cars[i].positionY <= -50 && mainGameController.cars[i].positionY >= -60 && mainGameController.cars[i].rotationType == 1{
 				if mainGameController.semaphores[1].color == 1 {
 					mainGameController.cars[i].speedY = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 2 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 2 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedX == 0 {
 						mainGameController.cars[i].speedY = mainGameController.cars[i].startingSpeedY
 					} else {
@@ -637,7 +645,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 2 && mainGameController.cars[i].positionX <= -140 && mainGameController.cars[i].positionX >= -150 {
 				if mainGameController.semaphores[5].color == 1 {
 					mainGameController.cars[i].speedX = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 2 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 2 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedY == 0 {
 						mainGameController.cars[i].speedX = mainGameController.cars[i].startingSpeedX
 					} else {
@@ -650,7 +668,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 3 && mainGameController.cars[i].positionX <= -65 && mainGameController.cars[i].positionX >= -75 {
 				if mainGameController.semaphores[4].color == 1 {
 					mainGameController.cars[i].speedX = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 3 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 3 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedY == 0 {
 						mainGameController.cars[i].speedX = mainGameController.cars[i].startingSpeedX
 					} else {
@@ -662,7 +690,17 @@ func update(screen *ebiten.Image) error {
 			if mainGameController.cars[i].routeNumber == 3 && mainGameController.cars[i].positionY >= 135 && mainGameController.cars[i].positionY <= 145 {
 				if mainGameController.semaphores[0].color == 1 {
 					mainGameController.cars[i].speedY = 0
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 3 && k>i && k != i{
+							mainGameController.cars[k].alreadyStopped = true
+						}
+					}
 				} else {
+					for k := 0; k < mainGameController.numberOfCars; k++ {
+						if mainGameController.cars[k].routeNumber == 3 {
+							mainGameController.cars[k].alreadyStopped = false
+						}
+					}
 					if mainGameController.cars[i].startingSpeedX == 0 {
 						mainGameController.cars[i].speedY = mainGameController.cars[i].startingSpeedY
 					} else {
@@ -799,7 +837,7 @@ func main() {
 					destinationX: mainGameController.endingPositionsX[randomPosition],
 					destinationY: mainGameController.endingPositionsY[randomPosition],
 				}
-				tempSpeed := (1.5 + rand.Float64() * (2.5-1.5))
+				tempSpeed := (1.5 + rand.Float64() * (1.8-1.5))
 				tempCar := car{
 					//Random speed from 1 to 10
 					speedX: tempSpeed,
@@ -818,9 +856,8 @@ func main() {
 					//Draw Options of the car
 					options: ebiten.DrawImageOptions{},
 					lastStep: false,
-					alreadySlowed: false,
-					slowedCounter: 0,
-					startTime: 2 + i,
+					alreadyStopped: false,
+					startTime: 2 + (i+2),
 				}
 				mainGameController.cars = append(mainGameController.cars, tempCar)
 				if randomPosition == 0{
