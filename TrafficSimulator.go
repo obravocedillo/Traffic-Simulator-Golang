@@ -34,7 +34,7 @@ type semaphore struct {
 	positionX float64
 	positionY float64
 	image *ebiten.Image
-	options *ebiten.DrawImageOptiorsns
+	options *ebiten.DrawImageOptions
 }
 
 //Struct of the cars
